@@ -1,5 +1,8 @@
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.exceptions import InvalidSignature
 from tkinter import messagebox
 import os
 
@@ -54,5 +57,48 @@ class claves:
         with open(public_path, "rb") as f:
             self.keypublica = serialization.load_pem_public_key(f.read())
         messagebox.showinfo("Claves", "Las claves se han cargado correctamente")
+
+
+    def firmar_mensaje(self, mensaje: bytes) -> bytes:
+        if self.keyprivada is None:
+            messagebox.showerror("Error", "Debe cargar o generar las claves primero.")
+            return b""
+        
+        try:
+            firma = self.keyprivada.sign(
+                mensaje,
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                hashes.SHA256()
+            )
+            return firma
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al firmar: {e}")
+            return b""
+
+
+    def verificar_firma(self, mensaje: bytes, firma: bytes) -> bool:
+        if self.keypublica is None:
+            messagebox.showerror("Error", "Debe cargar o generar las claves primero.")
+            return False
+
+        try:
+            self.keypublica.verify(
+                firma,
+                mensaje,
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                hashes.SHA256()
+            )
+            return True 
+        except InvalidSignature:
+            return False 
+        except Exception as e:
+            messagebox.showerror("Error", f"Error de verificación: {e}")
+            return False
 
 llaves = claves()
