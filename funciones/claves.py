@@ -100,5 +100,44 @@ class claves:
         except Exception as e:
             messagebox.showerror("Error", f"Error de verificación: {e}")
             return False
+        
+    #Cifrado con clave pública
+    def cifrar_mensaje(self, mensaje: bytes) -> bytes:
+        if self.keypublica is None:
+            messagebox.showerror("Error", "Debe cargar o generar las claves primero.")
+            return b""
+        try:
+            texto_cifrado = self.keypublica.encrypt(
+                mensaje,
+                padding.OAEP(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    algorithm=hashes.SHA256(),
+                    label=None
+                )
+            )
+            return texto_cifrado
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al cifrar: {e}")
+            return b""
+
+    #Descifrado con clave privada
+    def descifrar_mensaje(self, texto_cifrado: bytes) -> bytes:
+        if self.keyprivada is None:
+            messagebox.showerror("Error", "Debe cargar o generar las claves primero.")
+            return b""
+        try:
+            texto_descifrado = self.keyprivada.decrypt(
+                texto_cifrado,
+                padding.OAEP(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    algorithm=hashes.SHA256(),
+                    label=None
+                )
+            )
+            return texto_descifrado
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al descifrar: {e}")
+            return b""
+
 
 llaves = claves()

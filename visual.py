@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+from tkinter import filedialog
+import base64
 from funciones.claves import llaves
 
 ventana = tk.Tk()
@@ -41,6 +43,78 @@ button_cargar.pack(pady=20)
 
 llavessi = tk.Label(nbclave, text="Las llaves aún no han sido cargadas", font=("Arial", 12))
 llavessi.pack(pady=10)
+
+#Cigrar/Descigrar
+etiqueta_cifrar = tk.Label(nbcifrado, text="Ingrese un mensaje o seleccione un archivo de texto", font=("Arial", 12))
+etiqueta_cifrar.pack(pady=10)
+
+texto_a_cifrar = tk.Text(nbcifrado, height=5, width=60)
+texto_a_cifrar.pack(pady=5)
+
+#Cargar texto desde archivo
+def cargar_archivo():
+    ruta = filedialog.askopenfilename(title="Seleccionar archivo de texto", filetypes=[("Archivos de texto", "*.txt")])
+    if ruta:
+        with open(ruta, "r", encoding="utf-8") as f:
+            contenido = f.read()
+            texto_a_cifrar.delete("1.0", tk.END)
+            texto_a_cifrar.insert("1.0", contenido)
+
+btn_cargar_archivo = tk.Button(nbcifrado, text="Cargar Archivo .txt", command=cargar_archivo)
+btn_cargar_archivo.pack(pady=5)
+
+# Mostrar texto cifrado
+etiqueta_texto_cifrado = tk.Label(nbcifrado, text="Texto Cifrado (Base64):", font=("Arial", 12))
+etiqueta_texto_cifrado.pack(pady=5)
+
+texto_cifrado = tk.Text(nbcifrado, height=5, width=60, wrap="word")
+texto_cifrado.pack(pady=5)
+
+# Mostrar texto descifrado
+etiqueta_texto_descifrado = tk.Label(nbcifrado, text="Texto Descifrado:", font=("Arial", 12))
+etiqueta_texto_descifrado.pack(pady=5)
+
+texto_descifrado = tk.Text(nbcifrado, height=5, width=60, wrap="word")
+texto_descifrado.pack(pady=5)
+
+#Función para cifrar
+def cifrar_mensaje():
+    mensaje = texto_a_cifrar.get("1.0", tk.END).strip()
+    if not mensaje:
+        messagebox.showerror("Error", "Debe ingresar o cargar un mensaje para cifrar.")
+        return
+    try:
+        cifrado = llaves.cifrar_mensaje(mensaje.encode("utf-8"))
+        cifrado_b64 = base64.b64encode(cifrado).decode("utf-8")
+        texto_cifrado.delete("1.0", tk.END)
+        texto_cifrado.insert("1.0", cifrado_b64)
+        messagebox.showinfo("Cifrado", "Mensaje cifrado correctamente.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al cifrar: {e}")
+
+# Función para descifrar
+def descifrar_mensaje():
+    texto_b64 = texto_cifrado.get("1.0", tk.END).strip()
+    if not texto_b64:
+        messagebox.showerror("Error", "No hay texto cifrado para descifrar.")
+        return
+    try:
+        cifrado_bytes = base64.b64decode(texto_b64)
+        descifrado = llaves.descifrar_mensaje(cifrado_bytes)
+        texto_descifrado.delete("1.0", tk.END)
+        texto_descifrado.insert("1.0", descifrado.decode("utf-8"))
+        messagebox.showinfo("Descifrado", "Mensaje descifrado correctamente.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al descifrar: {e}")
+
+frame_botones = tk.Frame(nbcifrado)
+frame_botones.pack(pady=10)
+
+btn_cifrar = tk.Button(frame_botones, text="Cifrar Mensaje", command=cifrar_mensaje, width=20)
+btn_cifrar.grid(row=0, column=0, padx=10)
+
+btn_descifrar = tk.Button(frame_botones, text="Descifrar Mensaje", command=descifrar_mensaje, width=20)
+btn_descifrar.grid(row=0, column=1, padx=10)
 
 #Generar firma digital y verificar firma 
 etiqueta_firma = tk.Label(nbfirma, text="Mensaje a Firmar:", font=("Arial", 12))
